@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Scene Mapper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #arContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #000;
+        }
+
+        #videoStream {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+
+        #canvasOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #uiPanel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #0f0;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+        }
+
+        .stats {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .label {
+            color: #0f0;
+            font-weight: bold;
+        }
+
+        .value {
+            color: #00ff00;
+        }
+
+        #controlPanel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #0f0;
+            color: #0f0;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        button:active {
+            background: rgba(0, 255, 0, 0.4);
+        }
+
+        #detectionInfo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #0f0;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            max-width: 250px;
+        }
+
+        .detected-object {
+            margin: 5px 0;
+            padding: 3px;
+            background: rgba(0, 255, 0, 0.1);
+            border-left: 2px solid #0f0;
+            padding-left: 8px;
+        }
+
+        #loadingSpinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0f0;
+            text-align: center;
+            display: none;
+            z-index: 100;
+        }
+
+        .spinner {
+            border: 3px solid rgba(0, 255, 0, 0.3);
+            border-top: 3px solid #0f0;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="arContainer">
+        <video id="videoStream" playsinline muted></video>
+        <canvas id="canvasOverlay"></canvas>
+        
+        <div id="loadingSpinner">
+            <div class="spinner"></div>
+            <p>Loading AR Engine...</p>
+        </div>
+
+        <div id="controlPanel">
+            <button id="toggleDetection">Detection: ON</button>
+            <button id="toggleMapping">Mapping: ON</button>
+            <button id="captureScene">Capture</button>
+            <button id="clearScene">Clear</button>
+        </div>
+
+        <div id="detectionInfo">
+            <div class="label">Objects Detected:</div>
+            <div id="objectsList"></div>
+        </div>
+
+        <div id="uiPanel">
+            <div class="stats">
+                <span class="label">FPS:</span>
+                <span class="value" id="fps">0</span>
+            </div>
+            <div class="stats">
+                <span class="label">Objects:</span>
+                <span class="value" id="objectCount">0</span>
+            </div>
+            <div class="stats">
+                <span class="label">Confidence:</span>
+                <span class="value" id="avgConfidence">0%</span>
+            </div>
+            <div class="stats">
+                <span class="label">Floor Detected:</span>
+                <span class="value" id="floorStatus">No</span>
+            </div>
+            <div class="stats">
+                <span class="label">Scene Map:</span>
+                <span class="value" id="sceneStatus">Idle</span>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@r128/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@r128/examples/jsm/",
+            "tf": "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.min.js",
+            "tfcoco": "https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"
+        }
+    }
+    </script>
+
+    <script type="module" src="ar-engine.js"></script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
+
