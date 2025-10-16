@@ -1,5 +1,5 @@
 import * as tf from 'tf';
-import * as cocoSsd from 'tfcoco';
+import * as cocoSsd from 'coco-ssd';
 import { SceneManager } from './scene-manager.js';
 import { ObjectDetector } from './object-detector.js';
 import { UIManager } from './ui-manager.js';
