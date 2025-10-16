@@ -205,9 +205,56 @@
             "three": "https://cdn.jsdelivr.net/npm/three@r128/build/three.module.js",
             "three/addons/": "https://cdn.jsdelivr.net/npm/three@r128/examples/jsm/",
             "tf": "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0/dist/tf.esm.js",
-            "coco-ssd": "https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"
+            "@tensorflow-models/coco-ssd": "https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.js"
         }
     }
+    </script>
+
+    <script type="module">
+        // Immediately show loading and handle errors
+        window.addEventListener('error', (e) => {
+            console.error('Global error:', e.error);
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(255, 0, 0, 0.9);
+                color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                border: 2px solid #f00;
+                text-align: center;
+                z-index: 300;
+                max-width: 80vw;
+                font-family: monospace;
+            `;
+            errorDiv.textContent = 'Error: ' + e.error?.message || e.error;
+            document.body.appendChild(errorDiv);
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled rejection:', e.reason);
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(255, 0, 0, 0.9);
+                color: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                border: 2px solid #f00;
+                text-align: center;
+                z-index: 300;
+                max-width: 80vw;
+                font-family: monospace;
+            `;
+            errorDiv.textContent = 'Error: ' + (e.reason?.message || e.reason);
+            document.body.appendChild(errorDiv);
+        });
     </script>
 
     <script type="module" src="ar-engine.js"></script>

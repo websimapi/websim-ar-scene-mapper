@@ -1,5 +1,5 @@
 import * as tf from 'tf';
-import * as cocoSsd from 'coco-ssd';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
 
 export class ObjectDetector {
     constructor() {
@@ -9,16 +9,20 @@ export class ObjectDetector {
 
     async loadModel() {
         try {
+            console.log('Loading COCO-SSD model...');
             this.model = await cocoSsd.load();
             console.log('COCO-SSD model loaded successfully');
         } catch (error) {
             console.error('Failed to load COCO-SSD model:', error);
-            throw error;
+            throw new Error('Failed to load object detection model: ' + error.message);
         }
     }
 
     async detect(videoElement) {
-        if (!this.model) return [];
+        if (!this.model) {
+            console.warn('Model not loaded, skipping detection');
+            return [];
+        }
 
         try {
             const predictions = await this.model.estimateObjects(videoElement, this.minConfidence);

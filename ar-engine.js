@@ -1,11 +1,11 @@
 import * as tf from 'tf';
-import * as cocoSsd from 'coco-ssd';
 import { SceneManager } from './scene-manager.js';
 import { ObjectDetector } from './object-detector.js';
 import { UIManager } from './ui-manager.js';
 
 class AREngine {
     constructor() {
+        console.log('AREngine constructor starting...');
         this.video = document.getElementById('videoStream');
         this.canvas = document.getElementById('canvasOverlay');
         this.ctx = this.canvas.getContext('2d');
@@ -30,11 +30,21 @@ class AREngine {
 
     async init() {
         try {
+            console.log('Initializing AR Engine...');
             this.setupCanvasDimensions();
+            console.log('Canvas dimensions set');
+            
             await this.startCamera();
+            console.log('Camera started');
+            
             await this.loadModels();
+            console.log('Models loaded');
+            
             this.setupControls();
+            console.log('Controls set up');
+            
             this.startARLoop();
+            console.log('AR loop started');
         } catch (error) {
             console.error('AR Engine initialization failed:', error);
             this.showError('Failed to initialize AR: ' + error.message);
@@ -52,14 +62,17 @@ class AREngine {
 
     async startCamera() {
         return new Promise((resolve, reject) => {
+            console.log('Starting camera request...');
             // Show permission prompt
             const permissionPrompt = document.getElementById('permissionPrompt');
             const allowBtn = document.getElementById('allowCameraBtn');
             const denyBtn = document.getElementById('denyCameraBtn');
             
             permissionPrompt.style.display = 'block';
+            console.log('Permission prompt displayed');
             
             allowBtn.onclick = async () => {
+                console.log('User allowed camera access');
                 permissionPrompt.style.display = 'none';
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
@@ -70,17 +83,24 @@ class AREngine {
                         },
                         audio: false
                     });
+                    console.log('Camera stream obtained');
                     this.video.srcObject = stream;
                     this.video.onloadedmetadata = () => {
-                        this.video.play().catch(err => reject(err));
+                        console.log('Video metadata loaded');
+                        this.video.play().catch(err => {
+                            console.error('Play error:', err);
+                            reject(err);
+                        });
                         resolve();
                     };
                 } catch (error) {
+                    console.error('Camera access error:', error);
                     reject(new Error('Camera access denied: ' + error.message));
                 }
             };
             
             denyBtn.onclick = () => {
+                console.log('User denied camera access');
                 permissionPrompt.style.display = 'none';
                 reject(new Error('Camera permission denied by user'));
             };
@@ -88,10 +108,12 @@ class AREngine {
     }
 
     async loadModels() {
+        console.log('Loading models...');
         document.getElementById('loadingSpinner').style.display = 'block';
         try {
             this.objectDetector = new ObjectDetector();
             await this.objectDetector.loadModel();
+            console.log('Object detector model loaded');
             document.getElementById('loadingSpinner').style.display = 'none';
         } catch (error) {
             console.error('Failed to load models:', error);
@@ -341,6 +363,9 @@ class AREngine {
             text-align: center;
             z-index: 300;
             max-width: 80vw;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         `;
         errorDiv.textContent = message;
         document.body.appendChild(errorDiv);
@@ -348,6 +373,14 @@ class AREngine {
 }
 
 // Initialize AR Engine on page load
+console.log('Script loaded, waiting for window load event...');
 window.addEventListener('load', () => {
+    console.log('Window load event fired, creating AREngine...');
     new AREngine();
 });
+
+// Fallback in case page is already loaded
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    console.log('Page already loaded, creating AREngine immediately...');
+    new AREngine();
+}
