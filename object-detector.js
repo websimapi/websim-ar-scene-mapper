@@ -1,5 +1,5 @@
 import * as tf from 'tf';
-import * as cocoSsd from 'tfcoco';
+import * as cocoSsd from 'coco-ssd';
 
 export class ObjectDetector {
     constructor() {
@@ -49,4 +49,3 @@ export class ObjectDetector {
         }
     }
 }
-
