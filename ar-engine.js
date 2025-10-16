@@ -31,14 +31,13 @@ class AREngine {
     async init() {
         try {
             this.setupCanvasDimensions();
-            await this.requestCameraPermissions();
             await this.startCamera();
             await this.loadModels();
             this.setupControls();
             this.startARLoop();
         } catch (error) {
             console.error('AR Engine initialization failed:', error);
-            alert('Failed to initialize AR: ' + error.message);
+            this.showError('Failed to initialize AR: ' + error.message);
         }
     }
 
@@ -51,29 +50,39 @@ class AREngine {
         });
     }
 
-    async requestCameraPermissions() {
-        try {
-            await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' } 
-            });
-        } catch (error) {
-            throw new Error('Camera permission denied');
-        }
-    }
-
     async startCamera() {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { 
-                facingMode: 'environment',
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            }
-        });
-        this.video.srcObject = stream;
-        return new Promise(resolve => {
-            this.video.onloadedmetadata = () => {
-                this.video.play();
-                resolve();
+        return new Promise((resolve, reject) => {
+            // Show permission prompt
+            const permissionPrompt = document.getElementById('permissionPrompt');
+            const allowBtn = document.getElementById('allowCameraBtn');
+            const denyBtn = document.getElementById('denyCameraBtn');
+            
+            permissionPrompt.style.display = 'block';
+            
+            allowBtn.onclick = async () => {
+                permissionPrompt.style.display = 'none';
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { 
+                            facingMode: 'environment',
+                            width: { ideal: 1280 },
+                            height: { ideal: 720 }
+                        },
+                        audio: false
+                    });
+                    this.video.srcObject = stream;
+                    this.video.onloadedmetadata = () => {
+                        this.video.play().catch(err => reject(err));
+                        resolve();
+                    };
+                } catch (error) {
+                    reject(new Error('Camera access denied: ' + error.message));
+                }
+            };
+            
+            denyBtn.onclick = () => {
+                permissionPrompt.style.display = 'none';
+                reject(new Error('Camera permission denied by user'));
             };
         });
     }
@@ -86,6 +95,7 @@ class AREngine {
             document.getElementById('loadingSpinner').style.display = 'none';
         } catch (error) {
             console.error('Failed to load models:', error);
+            document.getElementById('loadingSpinner').style.display = 'none';
             throw error;
         }
     }
@@ -315,10 +325,29 @@ class AREngine {
         this.wallPlanes = [];
         this.uiManager.showNotification('Scene cleared!');
     }
+
+    showError(message) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.9);
+            color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #f00;
+            text-align: center;
+            z-index: 300;
+            max-width: 80vw;
+        `;
+        errorDiv.textContent = message;
+        document.body.appendChild(errorDiv);
+    }
 }
 
 // Initialize AR Engine on page load
 window.addEventListener('load', () => {
     new AREngine();
 });
-

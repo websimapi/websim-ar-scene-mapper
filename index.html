@@ -157,6 +157,12 @@
             <p>Loading AR Engine...</p>
         </div>
 
+        <div id="permissionPrompt" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0, 0, 0, 0.95); color: #0f0; padding: 30px; border-radius: 8px; border: 2px solid #0f0; text-align: center; z-index: 200; max-width: 80vw;">
+            <p style="margin-bottom: 20px; font-size: 16px;">Camera access required for AR</p>
+            <button id="allowCameraBtn" style="margin-right: 10px;">Allow Camera</button>
+            <button id="denyCameraBtn">Deny</button>
+        </div>
+
         <div id="controlPanel">
             <button id="toggleDetection">Detection: ON</button>
             <button id="toggleMapping">Mapping: ON</button>
@@ -208,4 +214,3 @@
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"4c6229722a6346bc8eb5cb0e5eae5d41","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
-
